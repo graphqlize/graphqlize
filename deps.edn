@@ -1,0 +1,6 @@
+{:paths   ["src"]
+ :deps    {honeyeql {:local/root "./../honeyeql"}
+           com.walmartlabs/lacinia {:mvn/version "0.36.0-alpha-2"}}
+ :aliases {:dev {:extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.8"}
+                               honeyeql-postgres {:local/root "./../honeyeql-postgres"}}
+                 :extra-paths ["dev"]}}}
