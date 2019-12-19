@@ -1,13 +1,12 @@
 (ns graphqlize.lacinia.core
   (:require [honeyeql.meta-data :as heql-md]
             [com.walmartlabs.lacinia.schema :as lacinia-schema]
-            [com.walmartlabs.lacinia.resolve :as lacinia-resolve]
             [com.walmartlabs.lacinia.util :as lacinia-util]
             [graphqlize.lacinia.object :as l-obj]
             [graphqlize.lacinia.query :as l-query]))
 
 (defn- resolvers [db-spec]
-  {:graphqlize/query-by-primary-key ^{:tag lacinia-resolve/ResolverResult}
+  {:graphqlize/query-by-primary-key
    (fn [context args value]
      nil)})
 
