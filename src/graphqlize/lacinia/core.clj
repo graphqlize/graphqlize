@@ -18,7 +18,7 @@
       (tap> {:lacinia-resolver {:selections-tree sel-tree
                                 :args            args}})
       (try
-        (let [resolved-value (heql/query-single db-spec heql-meta-data heql-config eql)]
+        (let [resolved-value (heql/query-single db-spec heql-config heql-meta-data eql)]
           (tap> {:resolved-value resolved-value})
           (lacinia-resolve/resolve-as resolved-value))
         (catch Throwable e
