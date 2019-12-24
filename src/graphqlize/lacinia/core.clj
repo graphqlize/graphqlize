@@ -13,7 +13,7 @@
   ^{:tag lacinia-resolve/ResolverResult}
   (fn [context args _]
     (let [sel-tree    (executor/selections-tree context)
-          eql         (l-ast/to-eql sel-tree args)
+          eql         (l-ast/to-eql (heql-md/namespace-idents heql-meta-data) sel-tree args)
           heql-config {:attribute {:return-as :unqualified-camel-case}}]
       (tap> {:lacinia-resolver {:selections-tree sel-tree
                                 :args            args}})
