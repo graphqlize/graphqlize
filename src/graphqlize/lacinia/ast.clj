@@ -4,18 +4,26 @@
 
 (declare to-eql)
 
-(defn- root-entity-ident [namespaces selection-tree]
+(defn- eql-root-attr-ns [namespaces selection-tree]
   (let [raw-namespaces   (map name namespaces)
         raw-entity-ident (-> (ffirst selection-tree)
                              namespace
                              inf/hyphenate)]
     (if-let [raw-ns (first (filter #(c-str/starts-with? raw-entity-ident %) raw-namespaces))]
-      (keyword raw-ns (c-str/replace-first raw-entity-ident (str raw-ns "-") ""))
-      (keyword raw-entity-ident))))
+      (let [x (c-str/replace-first raw-entity-ident (str raw-ns "-") "")]
+        (if (= x raw-ns) 
+          x
+          (str raw-ns "." x)))
+      raw-entity-ident)))
+
+(defn- args-to-ident-predicate [root-attr-ns args]
+  (first (map (fn [[k v]]
+                [(keyword root-attr-ns (inf/hyphenate (name k))) v]) args)))
 
 (defn to-eql [namespaces selection-tree args]
-  (let [root-entity-ident (root-entity-ident namespaces selection-tree)
-        eql [{[:actor/actor-id 1] [:actor/first-name
-                                   :actor/last-name]}]]
+  (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
+        attrs (map (comp inf/hyphenate name) (keys selection-tree))
+        eql [{(args-to-ident-predicate root-attr-ns args) 
+              (vec (map #(keyword root-attr-ns %) attrs))}]]
     (tap> {:eql eql})
     eql))
