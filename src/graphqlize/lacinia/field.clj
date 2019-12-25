@@ -8,8 +8,15 @@
     (:attr.type/big-integer :attr.type/integer) 'Int
     (:attr.type/float :attr.type/double :attr.type/decimal) 'Float
     :attr.type/boolean 'Boolean
-    (:attr.type/string :attr.type/Unknown) 'String
+    :attr.type/string 'String
+    (:attr.type/data-time
+     :attr.type/date :attr.type/time :attr.type/time-span
+     :attr.type/offset-date-time :attr.type/offset-time
+     :attr.type/ip-address :attr.type/json :attr.type/uuid :attr.type/unknown) 'String
     nil))
+
+(case 1
+  [1 2] "1")
 
 (defn generate [heql-meta-data attr-ident]
   (let [attr-meta-data                     (heql-md/attr-meta-data heql-meta-data attr-ident)
