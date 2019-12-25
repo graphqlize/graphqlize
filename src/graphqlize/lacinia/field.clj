@@ -15,9 +15,6 @@
      :attr.type/ip-address :attr.type/json :attr.type/uuid :attr.type/unknown) 'String
     nil))
 
-(case 1
-  [1 2] "1")
-
 (defn generate [heql-meta-data attr-ident]
   (let [attr-meta-data                     (heql-md/attr-meta-data heql-meta-data attr-ident)
         {:attr/keys [ident nullable type]} attr-meta-data
