@@ -1,6 +1,7 @@
 (ns graphqlize.lacinia.ast
   (:require [inflections.core :as inf]
-            [clojure.string :as c-str]))
+            [clojure.string :as c-str]
+            [honeyeql.debug :refer [trace>>]]))
 
 (declare to-eql)
 
@@ -26,5 +27,4 @@
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
         attrs        (map (comp inf/hyphenate name) (keys selection-tree))
         eql          [{(args-to-ident-predicate root-attr-ns args) (vec (map #(keyword root-attr-ns %) attrs))}]]
-    (tap> {:eql eql})
-    eql))
+    (trace>> :eql eql)))
