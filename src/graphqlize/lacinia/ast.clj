@@ -3,8 +3,6 @@
             [clojure.string :as c-str]
             [honeyeql.debug :refer [trace>>]]))
 
-(declare to-eql)
-
 (defn- eql-root-attr-ns [namespaces selection-tree]
   (let [raw-namespaces   (map name namespaces)
         raw-entity-ident (-> (ffirst selection-tree)
@@ -17,14 +15,28 @@
           (str raw-ns "." x)))
       raw-entity-ident)))
 
-(defn- args-to-ident-predicate [root-attr-ns args]
+(defn- ident [root-attr-ns args]
   (->> (map (fn [[k v]]
               [(keyword root-attr-ns (inf/hyphenate (name k))) v]) args)
        (apply concat)
        vec))
 
+(declare properties)
+
+(defn- field->prop [namespaces selection-tree field]
+  (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
+        prop         (->> (name field)
+                          inf/hyphenate
+                          (keyword root-attr-ns))]
+    (if-let [sub-selection (first (selection-tree field))]
+      (let [sub-selection-tree (:selections sub-selection)]
+        {prop (properties namespaces sub-selection-tree)})
+      prop)))
+
+(defn- properties [namespaces selection-tree]
+  (vec (map #(field->prop namespaces selection-tree %) (keys selection-tree))))
+
 (defn to-eql [namespaces selection-tree args]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
-        attrs        (map (comp inf/hyphenate name) (keys selection-tree))
-        eql          [{(args-to-ident-predicate root-attr-ns args) (vec (map #(keyword root-attr-ns %) attrs))}]]
+        eql          [{(ident root-attr-ns args) (properties namespaces selection-tree)}]]
     (trace>> :eql eql)))
