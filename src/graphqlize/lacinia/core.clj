@@ -6,7 +6,7 @@
             [com.walmartlabs.lacinia.util :as lacinia-util]
             [graphqlize.lacinia.object :as l-obj]
             [graphqlize.lacinia.query :as l-query]
-            [graphqlize.lacinia.ast :as l-ast]
+            [graphqlize.lacinia.eql :as l-eql]
             [honeyeql.core :as heql]
             [honeyeql.debug :refer [trace>>]]))
 
@@ -14,10 +14,10 @@
   ^{:tag lacinia-resolve/ResolverResult}
   (fn [context args _]
     (let [sel-tree    (executor/selections-tree context)
-          eql         (l-ast/to-eql (heql-md/namespace-idents heql-meta-data) sel-tree args)
+          eql         (l-eql/generate (heql-md/namespace-idents heql-meta-data) sel-tree args)
           heql-config {:attribute {:return-as :unqualified-camel-case}}]
       (trace>> :lacinia-resolver {:selections-tree sel-tree
-                                :args            args})
+                                  :args            args})
       (try
         (->> (heql/query-single db-spec heql-config heql-meta-data eql)
              (trace>> :resolved-value)
