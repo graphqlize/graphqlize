@@ -18,7 +18,7 @@
   (let [attr-meta-data               (heql-md/attr-meta-data heql-meta-data attr-ident)
         attr-ref-type                (:attr.ref/type attr-meta-data)
         entity-ident-in-pascal-case  (when attr-ref-type
-                                       (:entity.ident/pascal-case (heql-md/entity-meta-data heql-meta-data (:attr.ref/type attr-meta-data))))
+                                       (:entity.ident/pascal-case (heql-md/entity-meta-data heql-meta-data attr-ref-type)))
         {:attr/keys [nullable type]} attr-meta-data
         field-type                   (lacinia-type type entity-ident-in-pascal-case)
         gql-field-type               (cond->> field-type
