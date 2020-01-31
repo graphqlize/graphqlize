@@ -6,6 +6,7 @@
             [com.walmartlabs.lacinia.util :as lacinia-util]
             [graphqlize.lacinia.object :as l-obj]
             [graphqlize.lacinia.query :as l-query]
+            [graphqlize.lacinia.scalar :as l-scalar]
             [graphqlize.lacinia.eql :as l-eql]
             [honeyeql.core :as heql]
             [honeyeql.debug :refer [trace>>]]))
@@ -13,10 +14,10 @@
 (defn- query-by-primary-key-resolver [db-adapter]
   ^{:tag lacinia-resolve/ResolverResult}
   (fn [context args _]
-    (let [sel-tree    (executor/selections-tree context)
-          eql         (-> (heql/meta-data db-adapter)
-                          heql-md/namespace-idents
-                          (l-eql/generate sel-tree args))]
+    (let [sel-tree (executor/selections-tree context)
+          eql      (-> (heql/meta-data db-adapter)
+                       heql-md/namespace-idents
+                       (l-eql/generate sel-tree args))]
       (trace>> :lacinia-resolver {:selections-tree sel-tree
                                   :args            args})
       (try
@@ -35,7 +36,8 @@
         new-db-adapter (heql/merge-config db-adapter heql-config)
         heql-meta-data (heql/meta-data new-db-adapter)
         gql-schema     {:objects (l-obj/generate heql-meta-data)
-                        :queries (l-query/generate heql-meta-data)}]
+                        :queries (l-query/generate heql-meta-data)
+                        :scalars (l-scalar/generate)}]
     (trace>> :gql-schema gql-schema)
     (lacinia-schema/compile
      (lacinia-util/attach-resolvers gql-schema (resolvers new-db-adapter)))))

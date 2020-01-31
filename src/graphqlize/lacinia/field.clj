@@ -8,10 +8,11 @@
     (:attr.type/float :attr.type/double :attr.type/decimal) 'Float
     :attr.type/boolean 'Boolean
     :attr.type/string 'String
+    :attr.type/uuid 'UUID
     (:attr.type/data-time
      :attr.type/date :attr.type/time :attr.type/time-span
      :attr.type/offset-date-time :attr.type/offset-time
-     :attr.type/ip-address :attr.type/json :attr.type/uuid :attr.type/unknown) 'String
+     :attr.type/ip-address :attr.type/json :attr.type/unknown) 'String
     nil))
 
 (defn generate [heql-meta-data attr-ident]
