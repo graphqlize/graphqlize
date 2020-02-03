@@ -11,7 +11,7 @@
             [honeyeql.core :as heql]
             [honeyeql.debug :refer [trace>>]]))
 
-(defn- query-by-primary-key-resolver [db-adapter]
+(defn- hql-resolver [db-adapter heql-query-fn]
   ^{:tag lacinia-resolve/ResolverResult}
   (fn [context args _]
     (let [sel-tree (executor/selections-tree context)
@@ -21,7 +21,7 @@
       (trace>> :lacinia-resolver {:selections-tree sel-tree
                                   :args            args})
       (try
-        (->> (heql/query-single db-adapter eql)
+        (->> (heql-query-fn db-adapter eql)
              (trace>> :resolved-value)
              lacinia-resolve/resolve-as)
         (catch Throwable e
@@ -29,7 +29,8 @@
           (lacinia-resolve/resolve-as nil (lacinia-util/as-error-map e)))))))
 
 (defn- resolvers [db-adapter]
-  {:graphqlize/query-by-primary-key (query-by-primary-key-resolver db-adapter)})
+  {:graphqlize/query-by-primary-key (hql-resolver db-adapter heql/query-single)
+   :graphqlize/collection-query     (hql-resolver db-adapter heql/query)})
 
 (defn schema [db-adapter]
   (let [heql-config    {:attribute {:return-as :unqualified-camel-case}}

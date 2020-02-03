@@ -16,7 +16,7 @@
                   attr-type         (:attr/type attr-meta-data)
                   attr-ref-type     (:attr.ref/type attr-meta-data)
                   attr-lacinia-type (l-field/lacinia-type attr-type attr-ref-type)]
-              (assoc args (:attr.ident/camel-case attr-meta-data) 
+              (assoc args (:attr.ident/camel-case attr-meta-data)
                      {:type (list 'non-null attr-lacinia-type)})))
           {} primary-key-attrs))
 
@@ -28,7 +28,14 @@
                                                             :args    (primary-key-attrs->args heql-meta-data pk-attrs)
                                                             :resolve :graphqlize/query-by-primary-key}})))
 
+(defn- entity-meta-data->simple-query [entity-meta-data]
+  (let [{:entity.ident/keys [pascal-case plural]} entity-meta-data]
+    {plural {:type    (list 'non-null (list 'list pascal-case))
+             :resolve :graphqlize/collection-query}}))
+
 (defn generate [heql-meta-data]
   (apply merge (map (fn [e-md]
-                      (entity-meta-data->query-by-primary-key heql-meta-data e-md))
+                      (merge
+                       (entity-meta-data->query-by-primary-key heql-meta-data e-md)
+                       (entity-meta-data->simple-query e-md)))
                     (heql-md/entities heql-meta-data))))
