@@ -9,6 +9,7 @@
             [graphqlize.lacinia.scalar :as l-scalar]
             [graphqlize.lacinia.eql :as l-eql]
             [honeyeql.core :as heql]
+            [honeyeql.db :as heql-db]
             [honeyeql.debug :refer [trace>>]]))
 
 (defn- hql-resolver [db-adapter heql-query-fn]
@@ -32,13 +33,12 @@
   {:graphqlize/query-by-primary-key (hql-resolver db-adapter heql/query-single)
    :graphqlize/collection-query     (hql-resolver db-adapter heql/query)})
 
-(defn schema [db-adapter]
-  (let [heql-config    {:attribute {:return-as :unqualified-camel-case}}
-        new-db-adapter (heql/merge-config db-adapter heql-config)
-        heql-meta-data (heql/meta-data new-db-adapter)
+(defn schema [db-spec]
+  (let [db-adapter     (heql-db/initialize db-spec {:field/naming-convention :unqualified-camel-case})
+        heql-meta-data (heql/meta-data db-adapter)
         gql-schema     {:objects (l-obj/generate heql-meta-data)
                         :queries (l-query/generate heql-meta-data)
                         :scalars (l-scalar/generate)}]
     (trace>> :gql-schema gql-schema)
     (lacinia-schema/compile
-     (lacinia-util/attach-resolvers gql-schema (resolvers new-db-adapter)))))
+     (lacinia-util/attach-resolvers gql-schema (resolvers db-adapter)))))
