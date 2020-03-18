@@ -8,6 +8,7 @@ It aims to simplify the effort required to expose GraphQL APIs over relational d
 
 <a href="https://discord.gg/akkdPqf"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=GraphQLize"><img src="https://img.shields.io/badge/Follow-GraphQLize-blue.svg?style=flat&logo=twitter"></a>
+<a href="https://tinyletter.com/graphqlize-org"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
 > GraphQLize is at its early stages now. The objective of this early release is to get early feedback from the community. **It is not production-ready yet!**
 
@@ -58,7 +59,7 @@ There are close to [forty issues](https://github.com/graphqlize/graphqlize/issue
 You can keep track of the progress by
 
 - Following the [GitHub project board](https://github.com/orgs/graphqlize/projects/1)
-- Subscribing to [GraphQLize's newsletter]().
+- Subscribing to [GraphQLize's newsletter](https://tinyletter.com/graphqlize-org).
 - Joining [GraphQLize's Discord](https://discord.gg/akkdPqf).
 
 ## How can I contribute?
