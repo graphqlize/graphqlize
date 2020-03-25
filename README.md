@@ -37,16 +37,12 @@ Getting started with GraphQLize is simple and involves only a few steps.
 
 The actual implementation of these steps will vary based on which language (Java, Clojure) and framework (Spring Boot, Spark Java, Pedestal, etc.). Please refer the below links for more details.
 
-- Java
-
-  - [Spring Boot](http://graphqlize.org/docs/getting_started/java/springboot)
-  - [Spark Java](http://graphqlize.org/docs/getting_started/java/sparkjava)
-  - [Vanilla Java](https://www.graphqlize.org/docs/getting_started/java/vanilla)
-
-- Clojure
-  - [Pedestal](https://www.graphqlize.org/docs/getting_started/clojure/pedestal)
-  - [Ring](https://www.graphqlize.org/docs/getting_started/clojure/ring)
-  - [Vanilla Clojure](https://www.graphqlize.org/docs/getting_started/clojure/vanilla)
+| Langauge | Framework(s) |
+|----------|------------|
+| Java       | [Spring Boot](http://graphqlize.org/docs/getting_started/java/springboot), [Spark Java](http://graphqlize.org/docs/getting_started/java/sparkjava), [Vanilla Java](https://www.graphqlize.org/docs/getting_started/java/vanilla) |
+| Kotlin     | [Spring Boot](https://www.graphqlize.org/docs/getting_started/kotlin/springboot), [Ktor](https://www.graphqlize.org/docs/getting_started/kotlin/ktor) |
+| Clojure    | [Pedestal](https://www.graphqlize.org/docs/getting_started/clojure/pedestal), [Ring](https://www.graphqlize.org/docs/getting_started/clojure/ring), [Vanilla Clojure](https://www.graphqlize.org/docs/getting_started/clojure/vanilla) |
+| Scala      | [Scalatra](https://www.graphqlize.org/docs/getting_started/scala/scalatra)  |
 
 ## Is It Production Ready?
 
