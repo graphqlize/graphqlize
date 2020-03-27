@@ -15,11 +15,34 @@
           (str raw-ns "." x)))
       raw-entity-ident)))
 
+#_(eql-root-attr-ns [:public] {:Language/languageId [nil]})
+#_(eql-root-attr-ns [:person] {:PersonStateProvince/languageId [nil]})
+
+(def ^:private reserved-args #{:first :offset})
+
 (defn- ident [root-attr-ns args]
-  (->> (map (fn [[k v]]
-              [(keyword root-attr-ns (inf/hyphenate (name k))) v]) args)
-       (apply concat)
+  (->> (remove (fn [[k _]]
+                 (reserved-args k)) args)
+       (mapcat (fn [[k v]]
+                 [(keyword root-attr-ns (inf/hyphenate (name k))) v]))
        vec))
+
+#_(ident "language" {:first 1})
+#_(ident "language" {:language-id 1})
+#_(ident "film-actor" {:film-id 1 :actor-id 1})
+
+(defn- to-eql-param [[arg value]]
+  (case arg
+    :first [:limit value]
+    [arg value]))
+
+(defn- parameters [args]
+  (->> (filter (fn [[k _]]
+                 (reserved-args k)) args)
+       (map to-eql-param)
+       (into {})))
+
+#_(parameters {:first 10 :offset 10})
 
 (declare properties)
 
@@ -38,5 +61,11 @@
 
 (defn generate [namespaces selection-tree args]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
-        eql          [{(ident root-attr-ns args) (properties namespaces selection-tree)}]]
+        ident        (ident root-attr-ns args)
+        parameters   (parameters args)
+        ident        (if (empty? parameters)
+                       ident
+                       (list ident parameters))
+        properties   (properties namespaces selection-tree)
+        eql          [{ident properties}]]
     (trace>> :eql eql)))

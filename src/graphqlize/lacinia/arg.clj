@@ -17,8 +17,12 @@
                            (get-in entity-meta-data [:entity.relation/primary-key
                                                      :entity.relation.primary-key/attrs])))
 
+(def ^:private pagination-args
+  {:first {:type :Int}
+   :offset {:type :Int}})
+
 (defn find-args [heql-meta-data entity-meta-data query-type]
-  (let [args (if (= :graphqlize/query-by-primary-key query-type)
-               (query-by-primary-key-args heql-meta-data entity-meta-data)
-               {})]
-    args))
+  (cond-> {}
+    (= :graphqlize/query-by-primary-key query-type) (merge (query-by-primary-key-args heql-meta-data entity-meta-data))
+    (= :graphqlize/collection-query query-type) (merge pagination-args)
+    :else identity))
