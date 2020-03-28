@@ -1,30 +1,25 @@
 (ns graphqlize.lacinia.field
-  (:require [honeyeql.meta-data :as heql-md]))
-
-(defn lacinia-type [heql-attr-type entity-ident-in-pascal-case]
-  (case heql-attr-type
-    :attr.type/ref entity-ident-in-pascal-case
-    (:attr.type/big-integer :attr.type/integer) 'Int
-    (:attr.type/float :attr.type/double :attr.type/decimal) 'Float
-    :attr.type/boolean 'Boolean
-    :attr.type/string 'String
-    :attr.type/uuid 'UUID
-    (:attr.type/data-time
-     :attr.type/date :attr.type/time :attr.type/time-span
-     :attr.type/offset-date-time :attr.type/offset-time
-     :attr.type/ip-address :attr.type/json :attr.type/unknown) 'String
-    nil))
+  (:require [honeyeql.meta-data :as heql-md]
+            [graphqlize.lacinia.arg :as l-arg]
+            [graphqlize.lacinia.type :as l-type]))
 
 (defn generate [heql-meta-data attr-ident]
   (let [attr-meta-data               (heql-md/attr-meta-data heql-meta-data attr-ident)
         attr-ref-type                (:attr.ref/type attr-meta-data)
         entity-ident-in-pascal-case  (when attr-ref-type
-                                       (:entity.ident/pascal-case (heql-md/entity-meta-data heql-meta-data attr-ref-type)))
+                                       (:entity.ident/pascal-case
+                                        (heql-md/entity-meta-data heql-meta-data attr-ref-type)))
         {:attr/keys [nullable type]} attr-meta-data
-        field-type                   (lacinia-type type entity-ident-in-pascal-case)
+        has-many?                    (= :attr.ref.cardinality/many
+                                        (:attr.ref/cardinality attr-meta-data))
+        field-type                   (l-type/lacinia-type type entity-ident-in-pascal-case)
         gql-field-type               (cond->> field-type
-                                       (= :attr.ref.cardinality/many
-                                          (:attr.ref/cardinality attr-meta-data)) (list 'list)
-                                       (not nullable) (list 'non-null))]
+                                       has-many? (list 'list)
+                                       (not nullable) (list 'non-null))
+        field-name                   (:attr.ident/camel-case attr-meta-data)
+        field-def                    {:type gql-field-type}
+        field-def                    (if has-many?
+                                       (assoc field-def :args (l-arg/many-field-args))
+                                       field-def)]
     (when field-type
-      {(:attr.ident/camel-case attr-meta-data) {:type gql-field-type}})))
+      {field-name field-def})))

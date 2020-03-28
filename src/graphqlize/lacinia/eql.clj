@@ -18,7 +18,7 @@
 #_(eql-root-attr-ns [:public] {:Language/languageId [nil]})
 #_(eql-root-attr-ns [:person] {:PersonStateProvince/languageId [nil]})
 
-(def ^:private reserved-args #{:first :offset})
+(def ^:private reserved-args #{:limit :offset})
 
 (defn- ident [root-attr-ns args]
   (->> (remove (fn [[k _]]
@@ -29,12 +29,11 @@
 
 #_(ident "language" {:first 1})
 #_(ident "language" {:language-id 1})
-#_(ident "film-actor" {:film-id 1 :actor-id 1})
+#_(ident "film-actor" {:film-id  1
+                       :actor-id 1})
 
 (defn- to-eql-param [[arg value]]
-  (case arg
-    :first [:limit value]
-    [arg value]))
+  [arg value])
 
 (defn- parameters [args]
   (->> (filter (fn [[k _]]
@@ -42,18 +41,35 @@
        (map to-eql-param)
        (into {})))
 
-#_(parameters {:first 10 :offset 10})
+#_(parameters {:first  10
+               :offset 10})
 
 (declare properties)
+
+#_{:selections-tree #:Actor{:actorId   [nil]
+                            :firstName [nil]
+                            :films     [{:args       {:limit 2}
+                                         :selections #:Film{:title [nil]}}]}
+   :args            {:limit  2
+                     :offset 10}}
+
+#_{:selections-tree #:Actor{:actorId   [nil]
+                            :firstName [nil]
+                            :films     [{:selections #:Film{:title [nil]}}]}
+   :args            {:limit  2
+                     :offset 10}}
 
 (defn- field->prop [namespaces selection-tree field]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
         prop         (->> (name field)
                           inf/hyphenate
                           (keyword root-attr-ns))]
-    (if-let [sub-selection (first (selection-tree field))]
-      (let [sub-selection-tree (:selections sub-selection)]
-        {prop (properties namespaces sub-selection-tree)})
+    (if-let [{:keys [selections args]} (first (selection-tree field))]
+      (let [parameters (parameters args)
+            prop       (if (empty? parameters)
+                         prop
+                         (list prop parameters))]
+        {prop (properties namespaces selections)})
       prop)))
 
 (defn- properties [namespaces selection-tree]
