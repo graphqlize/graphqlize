@@ -16,7 +16,7 @@
   ^{:tag lacinia-resolve/ResolverResult}
   (fn [context args _]
     (let [sel-tree (executor/selections-tree context)
-          eql      (-> (heql/meta-data db-adapter)
+          eql      (-> (:heql-meta-data db-adapter)
                        heql-md/namespace-idents
                        (l-eql/generate sel-tree args))]
       (trace>> :lacinia-resolver {:selections-tree sel-tree
@@ -35,7 +35,7 @@
 
 (defn schema [db-spec]
   (let [db-adapter     (heql-db/initialize db-spec {:field/naming-convention :unqualified-camel-case})
-        heql-meta-data (heql/meta-data db-adapter)
+        heql-meta-data (:heql-meta-data db-adapter)
         gql-schema     {:objects (l-obj/generate heql-meta-data)
                         :queries (l-query/generate heql-meta-data)
                         :scalars (l-scalar/generate)}]
