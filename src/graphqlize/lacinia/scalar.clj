@@ -1,4 +1,6 @@
-(ns graphqlize.lacinia.scalar)
+(ns graphqlize.lacinia.scalar
+  (:import [java.util UUID]
+           [java.time LocalDateTime]))
 
 (defn- scalar [scalar-type data-type? parse-fn serialize-fn]
   {scalar-type {:parse     #(when (data-type? %)
@@ -12,4 +14,5 @@
                                 nil))}})
 
 (defn generate []
-  (scalar :UUID string? #(str (java.util.UUID/fromString %)) str))
+  (merge (scalar :UUID string? #(UUID/fromString %) str)
+         (scalar :DateTime string? #(LocalDateTime/parse %) str)))

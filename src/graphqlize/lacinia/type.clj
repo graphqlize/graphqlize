@@ -8,8 +8,8 @@
     :attr.type/boolean 'Boolean
     :attr.type/string 'String
     :attr.type/uuid 'UUID
-    (:attr.type/data-time
-     :attr.type/date :attr.type/time :attr.type/time-span
+    :attr.type/date-time 'DateTime
+    (:attr.type/date :attr.type/time :attr.type/time-span
      :attr.type/offset-date-time :attr.type/offset-time
      :attr.type/ip-address :attr.type/json :attr.type/unknown) 'String
     nil))
