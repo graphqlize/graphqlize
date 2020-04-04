@@ -15,6 +15,7 @@
     :attr.type/decimal 'BigDecimal
     :attr.type/date 'Date
     :attr.type/time 'Time
+    :attr.type/time-with-time-zone 'TimeWithTimeZone
     (:attr.type/time-span
      :attr.type/offset-time :attr.type/ip-address :attr.type/json 
      :attr.type/unknown) 'String
