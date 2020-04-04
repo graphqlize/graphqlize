@@ -1,6 +1,6 @@
 (ns graphqlize.lacinia.scalar
   (:import [java.util UUID]
-           [java.time LocalDate LocalDateTime OffsetDateTime]))
+           [java.time LocalDate LocalTime LocalDateTime OffsetDateTime]))
 
 (defn- scalar [scalar-type data-type? parse-fn serialize-fn description]
   {scalar-type {:parse     #(when (data-type? %)
@@ -20,6 +20,9 @@
          (scalar :Date string? 
                  #(LocalDate/parse %) str 
                  "A date without a time-zone in the ISO-8601 calendar system, such as 2007-12-03 (java.time.LocalDate).")
+         (scalar :Time string?
+                 #(LocalTime/parse %) str
+                 "A time without a time-zone in the ISO-8601 calendar system, such as 10:15:30 (java.time.LocalTime).")
          (scalar :DateTime string? 
                  #(LocalDateTime/parse %) str 
                  "A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30 (java.time.LocalDateTime).")

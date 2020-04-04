@@ -14,7 +14,8 @@
     :attr.type/date-time-with-time-zone 'DateTimeWithTimeZone
     :attr.type/decimal 'BigDecimal
     :attr.type/date 'Date
-    (:attr.type/time :attr.type/time-span
+    :attr.type/time 'Time
+    (:attr.type/time-span
      :attr.type/offset-time :attr.type/ip-address :attr.type/json 
      :attr.type/unknown) 'String
     nil))
