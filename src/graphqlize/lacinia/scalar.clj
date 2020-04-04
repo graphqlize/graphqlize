@@ -17,4 +17,5 @@
 (defn generate []
   (merge (scalar :UUID string? #(UUID/fromString %) str "UUID")
          (scalar :DateTime string? #(LocalDateTime/parse %) str "A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30.")
-         (scalar :DateTimeWithTimeZone string? #(OffsetDateTime/parse %) str "A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00.")))
+         (scalar :DateTimeWithTimeZone string? #(OffsetDateTime/parse %) str "A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00.")
+         (scalar :BigDecimal number? bigdec identity "An arbitrary-precision signed decimal number (java.math.BigDecimal)")))
