@@ -4,6 +4,7 @@
   (case heql-attr-type
     :attr.type/ref entity-ident-in-pascal-case
     (:attr.type/big-integer :attr.type/integer) 'Int
+    :attr.type/long 'Long
     (:attr.type/float :attr.type/double) 'Float
     :attr.type/boolean 'Boolean
     :attr.type/string 'String
