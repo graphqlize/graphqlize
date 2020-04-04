@@ -1,6 +1,6 @@
 (ns graphqlize.lacinia.scalar
   (:import [java.util UUID]
-           [java.time LocalDateTime OffsetDateTime]))
+           [java.time LocalDate LocalDateTime OffsetDateTime]))
 
 (defn- scalar [scalar-type data-type? parse-fn serialize-fn description]
   {scalar-type {:parse     #(when (data-type? %)
@@ -15,9 +15,23 @@
                                 nil))}})
 
 (defn generate []
-  (merge (scalar :UUID string? #(UUID/fromString %) str "UUID")
-         (scalar :DateTime string? #(LocalDateTime/parse %) str "A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30.")
-         (scalar :DateTimeWithTimeZone string? #(OffsetDateTime/parse %) str "A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00.")
-         (scalar :BigDecimal number? bigdec identity "An arbitrary-precision signed decimal number (java.math.BigDecimal)")
-         (scalar :Long number? long identity "The long data type is a 64-bit two's complement integer (java.lang.Long).")
-         (scalar :BigInteger number? biginteger identity "An arbitrary-precision integer (java.math.BigInteger)")))
+  (merge (scalar :UUID string? 
+                 #(UUID/fromString %) str "UUID")
+         (scalar :Date string? 
+                 #(LocalDate/parse %) str 
+                 "A date without a time-zone in the ISO-8601 calendar system, such as 2007-12-03 (java.time.LocalDate).")
+         (scalar :DateTime string? 
+                 #(LocalDateTime/parse %) str 
+                 "A date-time without a time-zone in the ISO-8601 calendar system, such as 2007-12-03T10:15:30 (java.time.LocalDateTime).")
+         (scalar :DateTimeWithTimeZone string? 
+                 #(OffsetDateTime/parse %) str 
+                 "A date-time with an offset from UTC/Greenwich in the ISO-8601 calendar system, such as 2007-12-03T10:15:30+01:00 (java.time.OffsetDateTime).")
+         (scalar :BigDecimal number? 
+                 bigdec identity 
+                 "An arbitrary-precision signed decimal number (java.math.BigDecimal)")
+         (scalar :Long number? 
+                 long identity 
+                 "The long data type is a 64-bit two's complement integer (java.lang.Long).")
+         (scalar :BigInteger number? 
+                 biginteger identity 
+                 "An arbitrary-precision integer (java.math.BigInteger)")))
