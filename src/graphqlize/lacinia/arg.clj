@@ -21,11 +21,19 @@
   {:limit  {:type :Int}
    :offset {:type :Int}})
 
+(defn- order-by-arg [e-md]
+  {:orderBy {:type (-> (:entity.ident/pascal-case e-md)
+                       name
+                       (str "OrderBy")
+                       keyword)}})
+
 (defn many-field-args []
   pagination-args)
 
 (defn query-args [heql-meta-data entity-meta-data query-type]
   (cond-> {}
     (= :graphqlize/query-by-primary-key query-type) (merge (query-by-primary-key-args heql-meta-data entity-meta-data))
-    (= :graphqlize/collection-query query-type) (merge pagination-args)
+    (= :graphqlize/collection-query query-type) (merge 
+                                                 pagination-args
+                                                 (order-by-arg entity-meta-data))
     :else identity))

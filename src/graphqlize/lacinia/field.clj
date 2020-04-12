@@ -6,9 +6,9 @@
 (defn generate [heql-meta-data attr-ident]
   (let [attr-meta-data               (heql-md/attr-meta-data heql-meta-data attr-ident)
         attr-ref-type                (:attr.ref/type attr-meta-data)
-        entity-ident-in-pascal-case  (when attr-ref-type
-                                       (:entity.ident/pascal-case
-                                        (heql-md/entity-meta-data heql-meta-data attr-ref-type)))
+        ref-entity-md                (when attr-ref-type
+                                       (heql-md/entity-meta-data heql-meta-data attr-ref-type))
+        entity-ident-in-pascal-case  (:entity.ident/pascal-case ref-entity-md)
         {:attr/keys [nullable type]} attr-meta-data
         has-many?                    (= :attr.ref.cardinality/many
                                         (:attr.ref/cardinality attr-meta-data))

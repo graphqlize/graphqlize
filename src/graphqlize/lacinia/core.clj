@@ -7,6 +7,8 @@
             [graphqlize.lacinia.object :as l-obj]
             [graphqlize.lacinia.query :as l-query]
             [graphqlize.lacinia.scalar :as l-scalar]
+            [graphqlize.lacinia.enum :as l-enum]
+            [graphqlize.lacinia.input-object :as l-ip-obj]
             [graphqlize.lacinia.eql :as l-eql]
             [honeyeql.core :as heql]
             [honeyeql.db :as heql-db]
@@ -38,7 +40,9 @@
         heql-meta-data (:heql-meta-data db-adapter)
         gql-schema     {:objects (l-obj/generate heql-meta-data)
                         :queries (l-query/generate heql-meta-data)
-                        :scalars (l-scalar/generate)}]
+                        :scalars (l-scalar/generate)
+                        :enums (l-enum/generate)
+                        :input-objects (l-ip-obj/generate heql-meta-data)}]
     (trace>> :gql-schema gql-schema)
     (lacinia-schema/compile
      (lacinia-util/attach-resolvers gql-schema (resolvers db-adapter)))))
