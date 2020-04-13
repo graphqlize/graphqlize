@@ -19,7 +19,7 @@
         field-name                   (:attr.ident/camel-case attr-meta-data)
         field-def                    {:type gql-field-type}
         field-def                    (if has-many?
-                                       (assoc field-def :args (l-arg/many-field-args))
+                                       (assoc field-def :args (l-arg/many-field-args heql-meta-data ref-entity-md))
                                        field-def)]
     (when field-type
       {field-name field-def})))

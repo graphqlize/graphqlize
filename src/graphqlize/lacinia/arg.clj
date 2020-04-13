@@ -27,8 +27,11 @@
                        (str "OrderBy")
                        keyword)}})
 
-(defn many-field-args []
-  pagination-args)
+(defn many-field-args [heql-meta-data entity-meta-data]
+  (if (not= "MySQL" (heql-md/db-product-name heql-meta-data))
+    (merge pagination-args
+           (order-by-arg entity-meta-data))
+    pagination-args))
 
 (defn query-args [heql-meta-data entity-meta-data query-type]
   (cond-> {}

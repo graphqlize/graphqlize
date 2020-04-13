@@ -32,47 +32,34 @@
 #_(ident "film-actor" {:film-id  1
                        :actor-id 1})
 
-(defn- eqlify-order-by-param [root-attr-ns param]
+(defn- eqlify-order-by-param [selection-tree param]
   (map (fn [[k v]]
-         [(->> (name k)
-               inf/hyphenate
-               (keyword (name root-attr-ns)))
-          (-> (name v)
-              string/lower-case
-              keyword)]) param))
+         (let [root-ns (-> (ffirst selection-tree)
+                           namespace
+                           inf/hyphenate)]
+           [(->> (name k)
+                inf/hyphenate
+                (keyword root-ns))
+           (-> (name v)
+               string/lower-case
+               keyword)])) param))
 
-#_(eqlify-order-by-param "actor"
+#_(eqlify-order-by-param {:City/city [nil]}
                          {:firstName :ASC
                           :lastName  :DESC})
 
-(defn- to-eql-param [root-attr-ns [arg value]]
-  (prn root-attr-ns arg value)
+(defn- to-eql-param [selection-tree [arg value]]
   (case arg
-    :orderBy [:order-by (eqlify-order-by-param root-attr-ns value)]
+    :orderBy [:order-by (eqlify-order-by-param selection-tree value)]
     [arg value]))
 
-(defn- parameters [root-attr-ns args]
+(defn- parameters [selection-tree args]
   (->> (filter (fn [[k _]]
                  (reserved-args k)) args)
-       (map #(to-eql-param root-attr-ns %))
+       (map #(to-eql-param selection-tree %))
        (into {})))
 
-#_ (parameters "actor" {:limit 10 :offset 10})
-
 (declare properties)
-
-#_{:selections-tree #:Actor{:actorId   [nil]
-                            :firstName [nil]
-                            :films     [{:args       {:limit 2}
-                                         :selections #:Film{:title [nil]}}]}
-   :args            {:limit  2
-                     :offset 10}}
-
-#_{:selections-tree #:Actor{:actorId   [nil]
-                            :firstName [nil]
-                            :films     [{:selections #:Film{:title [nil]}}]}
-   :args            {:limit  2
-                     :offset 10}}
 
 (defn- field->prop [namespaces selection-tree field]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
@@ -80,7 +67,7 @@
                           inf/hyphenate
                           (keyword root-attr-ns))]
     (if-let [{:keys [selections args]} (first (selection-tree field))]
-      (let [parameters (parameters root-attr-ns args)
+      (let [parameters (parameters selections args)
             prop       (if (empty? parameters)
                          prop
                          (list prop parameters))]
@@ -93,7 +80,7 @@
 (defn generate [namespaces selection-tree args]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
         ident        (ident root-attr-ns args)
-        parameters   (parameters root-attr-ns args)
+        parameters   (parameters selection-tree args)
         ident        (if (empty? parameters)
                        ident
                        (list ident parameters))
