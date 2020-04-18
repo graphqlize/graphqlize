@@ -18,7 +18,7 @@
 #_(eql-root-attr-ns [:public] {:Language/languageId [nil]})
 #_(eql-root-attr-ns [:person] {:PersonStateProvince/languageId [nil]})
 
-(def ^:private reserved-args #{:limit :offset :orderBy})
+(def ^:private reserved-args #{:limit :offset :orderBy :where})
 
 (defn- ident [root-attr-ns args]
   (->> (remove (fn [[k _]]
@@ -38,19 +38,56 @@
                            namespace
                            inf/hyphenate)]
            [(->> (name k)
-                inf/hyphenate
-                (keyword root-ns))
-           (-> (name v)
-               string/lower-case
-               keyword)])) param))
+                 inf/hyphenate
+                 (keyword root-ns))
+            (-> (name v)
+                string/lower-case
+                keyword)])) param))
 
 #_(eqlify-order-by-param {:City/city [nil]}
                          {:firstName :ASC
                           :lastName  :DESC})
 
+(defn- hql-predicate [op]
+  (fn [col v]
+    (case op
+      :isNull (if v [:= col nil] [:<> col nil])
+      :isNotNull (if v [:<> col nil] [:= col nil])
+      :between [:between col (:from v) (:to v)]
+      [op col v])))
+
+(def ^:private hql-predicate-fn
+  {:eq        (hql-predicate :=)
+   :lt        (hql-predicate :<)
+   :lte       (hql-predicate :<=)
+   :gt        (hql-predicate :>)
+   :gte       (hql-predicate :>=)
+   :neq       (hql-predicate :<>)
+   :isNull    (hql-predicate :isNull)
+   :isNotNull (hql-predicate :isNotNull)
+   :between   (hql-predicate :between)})
+
+(defn- eqlify-where-predicate [selection-tree param]
+  (first (map (fn [[k v]]
+                (let [root-ns (-> (ffirst selection-tree)
+                                  namespace
+                                  inf/hyphenate)
+                      column  (->> (name k)
+                                   inf/hyphenate
+                                   (keyword root-ns))
+                      [op v]  (first v)]
+                  ((hql-predicate-fn op) column v)))
+              param)))
+
+#_(eqlify-where-predicate {:Actor/firstName [nil]
+                           :Actor/lastName  [nil]}
+                          {:actorId {:eq 1}
+                           :name    {:eq "foo"}})
+
 (defn- to-eql-param [selection-tree [arg value]]
   (case arg
     :orderBy [:order-by (eqlify-order-by-param selection-tree value)]
+    :where [:where (eqlify-where-predicate selection-tree value)]
     [arg value]))
 
 (defn- parameters [selection-tree args]

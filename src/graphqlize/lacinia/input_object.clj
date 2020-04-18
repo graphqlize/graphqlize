@@ -16,35 +16,47 @@
                                                :isNull    {:type 'Boolean}
                                                :isNotNull {:type 'Boolean}
                                                :between   {:type between-op}}}}]
-    (when (l-type/numeric? lacinia-type)
+    (case (name lacinia-type)
+      "String"  (update-in (dissoc all-ops between-op)
+                           [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
+      "Boolean" (update-in (dissoc all-ops between-op)
+                           [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
+      "UUID" (update-in (dissoc all-ops between-op)
+                        [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
       all-ops)))
 
 (def ^:private comparison-input-objects
-  (merge 
+  (merge
    (comparison-input-object 'Int)
    (comparison-input-object 'Long)
    (comparison-input-object 'BigInteger)
    (comparison-input-object 'Float)
-   (comparison-input-object 'BigDecimal)))
+   (comparison-input-object 'BigDecimal)
+   (comparison-input-object 'UUID)
+   (comparison-input-object 'String)
+   (comparison-input-object 'Boolean)
+   (comparison-input-object 'Date)
+   (comparison-input-object 'Time)
+   (comparison-input-object 'TimeWithTimeZone)
+   (comparison-input-object 'DateTime)
+   (comparison-input-object 'DateTimeWithTimeZone)))
 
 (defn- order-by-field [attr-md]
   {(:attr.ident/camel-case attr-md) {:type :OrderBy}})
 
 (defn- where-predicate-field [attr-md]
   (let [lacinia-type (l-type/lacinia-type (:attr/type attr-md))]
-   (when (l-type/numeric? lacinia-type)
-    {(:attr.ident/camel-case attr-md) {:type (-> (name lacinia-type) 
+    {(:attr.ident/camel-case attr-md) {:type (-> (name lacinia-type)
                                                  (str "ComparisonOp")
-                                                 keyword)}})))
+                                                 keyword)}}))
 
 (defn- entity-meta-data->input-object [heql-meta-data entity-meta-data]
-  (let [entity-name                          (name (:entity.ident/pascal-case entity-meta-data))
-        attr-idents                          (heql-md/attr-idents entity-meta-data)
+  (let [entity-name               (name (:entity.ident/pascal-case entity-meta-data))
+        attr-idents               (heql-md/attr-idents entity-meta-data)
         non-relationship-attrs-md (filter
-                                  #(not= :attr.type/ref (:attr/type %)) (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents))]
+                                   #(not= :attr.type/ref (:attr/type %)) (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents))]
     {(keyword (str entity-name "OrderBy"))   {:fields (apply merge (map order-by-field non-relationship-attrs-md))}
      (keyword (str entity-name "Predicate")) {:fields (apply merge (map where-predicate-field non-relationship-attrs-md))}}))
-
 
 (defn generate [heql-meta-data]
   (->> (heql-md/entities heql-meta-data)
