@@ -3,8 +3,7 @@
             [graphqlize.lacinia.field :as l-field]))
 
 (defn- entity-meta-data->object [heql-meta-data entity-meta-data]
-  (let [{:entity/keys [req-attrs opt-attrs]} entity-meta-data
-        attr-idents                          (concat req-attrs opt-attrs)]
+  (let [attr-idents                          (heql-md/attr-idents entity-meta-data)]
     {(:entity.ident/pascal-case entity-meta-data)
      {:fields (apply merge (map #(l-field/generate heql-meta-data %) attr-idents))}}))
 

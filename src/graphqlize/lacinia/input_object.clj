@@ -1,20 +1,53 @@
 (ns graphqlize.lacinia.input-object
-  (:require [honeyeql.meta-data :as heql-md]))
+  (:require [honeyeql.meta-data :as heql-md]
+            [graphqlize.lacinia.type :as l-type]))
+
+(defn- comparison-input-object [lacinia-type]
+  (let [between-op    (keyword (str lacinia-type "BetweenOp"))
+        comparison-op (keyword (str lacinia-type "ComparisonOp"))
+        all-ops       {between-op    {:fields {:from {:type (list 'non-null lacinia-type)}
+                                               :to   {:type (list 'non-null lacinia-type)}}}
+                       comparison-op {:fields {:eq        {:type lacinia-type}
+                                               :neq       {:type lacinia-type}
+                                               :lt        {:type lacinia-type}
+                                               :lte       {:type lacinia-type}
+                                               :gt        {:type lacinia-type}
+                                               :gte       {:type lacinia-type}
+                                               :isNull    {:type 'Boolean}
+                                               :isNotNull {:type 'Boolean}
+                                               :between   {:type between-op}}}}]
+    (when (l-type/numeric? lacinia-type)
+      all-ops)))
+
+(def ^:private comparison-input-objects
+  (merge 
+   (comparison-input-object 'Int)
+   (comparison-input-object 'Long)
+   (comparison-input-object 'BigInteger)
+   (comparison-input-object 'Float)
+   (comparison-input-object 'BigDecimal)))
 
 (defn- order-by-field [attr-md]
   {(:attr.ident/camel-case attr-md) {:type :OrderBy}})
 
+(defn- where-predicate-field [attr-md]
+  (let [lacinia-type (l-type/lacinia-type (:attr/type attr-md))]
+   (when (l-type/numeric? lacinia-type)
+    {(:attr.ident/camel-case attr-md) {:type (-> (name lacinia-type) 
+                                                 (str "ComparisonOp")
+                                                 keyword)}})))
+
 (defn- entity-meta-data->input-object [heql-meta-data entity-meta-data]
   (let [entity-name                          (name (:entity.ident/pascal-case entity-meta-data))
-        {:entity/keys [req-attrs opt-attrs]} entity-meta-data
-        attr-idents                          (concat req-attrs opt-attrs)]
-    {(keyword (str entity-name "OrderBy")) {:fields (->>
-                                                     (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents)
-                                                     (filter #(not= :attr.type/ref (:attr/type %)))
-                                                     (map order-by-field)
-                                                     (apply merge))}}))
+        attr-idents                          (heql-md/attr-idents entity-meta-data)
+        non-relationship-attrs-md (filter
+                                  #(not= :attr.type/ref (:attr/type %)) (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents))]
+    {(keyword (str entity-name "OrderBy"))   {:fields (apply merge (map order-by-field non-relationship-attrs-md))}
+     (keyword (str entity-name "Predicate")) {:fields (apply merge (map where-predicate-field non-relationship-attrs-md))}}))
+
 
 (defn generate [heql-meta-data]
-  (apply merge (map (fn [e-md]
-                      (entity-meta-data->input-object heql-meta-data e-md))
-                    (heql-md/entities heql-meta-data))))
+  (->> (heql-md/entities heql-meta-data)
+       (map #(entity-meta-data->input-object heql-meta-data %))
+       (cons comparison-input-objects)
+       (apply merge)))

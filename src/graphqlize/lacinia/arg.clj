@@ -27,16 +27,25 @@
                        (str "OrderBy")
                        keyword)}})
 
+(defn- where-predicate-arg [e-md]
+  {:where {:type (-> (:entity.ident/pascal-case e-md)
+                       name
+                       (str "Predicate")
+                       keyword)}})
+
 (defn many-field-args [heql-meta-data entity-meta-data]
-  (if (not= "MySQL" (heql-md/db-product-name heql-meta-data))
-    (merge pagination-args
-           (order-by-arg entity-meta-data))
-    pagination-args))
+  (let [default-args (merge pagination-args
+                            (where-predicate-arg entity-meta-data))]
+    (if (not= "MySQL" (heql-md/db-product-name heql-meta-data))
+      (merge default-args
+             (order-by-arg entity-meta-data))
+      default-args)))
 
 (defn query-args [heql-meta-data entity-meta-data query-type]
   (cond-> {}
     (= :graphqlize/query-by-primary-key query-type) (merge (query-by-primary-key-args heql-meta-data entity-meta-data))
     (= :graphqlize/collection-query query-type) (merge 
                                                  pagination-args
-                                                 (order-by-arg entity-meta-data))
+                                                 (order-by-arg entity-meta-data)
+                                                 (where-predicate-arg entity-meta-data))
     :else identity))

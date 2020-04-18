@@ -20,3 +20,6 @@
      :attr.type/offset-time :attr.type/ip-address :attr.type/json 
      :attr.type/unknown) 'String
     nil))
+
+(defn numeric? [lacinia-type]
+  (contains? #{'Int 'Long 'BigInteger 'Float 'BigDecimal} lacinia-type))
