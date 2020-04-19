@@ -13,6 +13,8 @@
                                                :lte       {:type lacinia-type}
                                                :gt        {:type lacinia-type}
                                                :gte       {:type lacinia-type}
+                                               :in        {:type (list 'list (list 'non-null lacinia-type))}
+                                               :notIn     {:type (list 'list (list 'non-null lacinia-type))}
                                                :isNull    {:type 'Boolean}
                                                :isNotNull {:type 'Boolean}
                                                :between   {:type between-op}}}}]
@@ -20,7 +22,7 @@
       "String"  (update-in (dissoc all-ops between-op)
                            [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
       "Boolean" (update-in (dissoc all-ops between-op)
-                           [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
+                           [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte :in :notIn))
       "UUID" (update-in (dissoc all-ops between-op)
                         [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
       all-ops)))
