@@ -19,8 +19,10 @@
                                                :isNotNull {:type 'Boolean}
                                                :between   {:type between-op}}}}]
     (case (name lacinia-type)
-      "String"  (update-in (dissoc all-ops between-op)
-                           [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
+      "String"  (-> (dissoc all-ops between-op)
+                    (update-in [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
+                    (update-in [comparison-op :fields] #(assoc %
+                                                              :like {:type 'String} :notLike {:type 'String})))
       "Boolean" (update-in (dissoc all-ops between-op)
                            [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte :in :notIn))
       "UUID" (update-in (dissoc all-ops between-op)

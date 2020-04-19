@@ -65,6 +65,8 @@
    :neq       (hql-predicate :<>)
    :in        (hql-predicate :in)
    :notIn     (hql-predicate :not-in)
+   :notLike   (hql-predicate :not-like)
+   :like      (hql-predicate :like)
    :isNull    (hql-predicate :isNull)
    :isNotNull (hql-predicate :isNotNull)
    :between   (hql-predicate :between)})
