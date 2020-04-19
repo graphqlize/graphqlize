@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.graphqlize</groupId>
   <artifactId>graphqlize</artifactId>
-  <version>0.1.0-alpha11</version>
+  <version>0.1.0-alpha12</version>
 
   <name>GraphQLize</name>
   <description>GraphQLize is a Clojure library to build production-ready GraphQL APIs instantly from relational databases (Postgres, MySQL, Oracle, SQLServer).</description>
