@@ -22,7 +22,7 @@
       "String"  (-> (dissoc all-ops between-op)
                     (update-in [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte))
                     (update-in [comparison-op :fields] #(assoc %
-                                                              :like {:type 'String} :notLike {:type 'String})))
+                                                               :like {:type 'String} :notLike {:type 'String})))
       "Boolean" (update-in (dissoc all-ops between-op)
                            [comparison-op :fields] #(dissoc % :between :lt :lte :gt :gte :in :notIn))
       "UUID" (update-in (dissoc all-ops between-op)
@@ -57,10 +57,16 @@
 (defn- entity-meta-data->input-object [heql-meta-data entity-meta-data]
   (let [entity-name               (name (:entity.ident/pascal-case entity-meta-data))
         attr-idents               (heql-md/attr-idents entity-meta-data)
+        predicate-type            (keyword (str entity-name "Predicate"))
         non-relationship-attrs-md (filter
                                    #(not= :attr.type/ref (:attr/type %)) (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents))]
-    {(keyword (str entity-name "OrderBy"))   {:fields (apply merge (map order-by-field non-relationship-attrs-md))}
-     (keyword (str entity-name "Predicate")) {:fields (apply merge (map where-predicate-field non-relationship-attrs-md))}}))
+    {(keyword (str entity-name "OrderBy")) {:fields (apply merge (map order-by-field non-relationship-attrs-md))}
+     predicate-type                        {:fields (apply merge
+                                                           (cons
+                                                            {:and {:type (list 'list (list 'non-null predicate-type))}
+                                                             :or  {:type (list 'list (list 'non-null predicate-type))}
+                                                             :not {:type predicate-type}}
+                                                            (map where-predicate-field non-relationship-attrs-md)))}}))
 
 (defn generate [heql-meta-data]
   (->> (heql-md/entities heql-meta-data)

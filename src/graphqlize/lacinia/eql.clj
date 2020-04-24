@@ -71,17 +71,41 @@
    :isNotNull (hql-predicate :isNotNull)
    :between   (hql-predicate :between)})
 
+(defn- where-predicate [root-ns field pred]
+  (let [column (->> (name field)
+                    inf/hyphenate
+                    (keyword root-ns))
+        [op v] (first pred)]
+    ((hql-predicate-fn op) column v)))
+
+(defn- where-clause [root-ns xs]
+  (mapcat 
+   #(map (fn [[k v]]
+           (case k
+             :and (concat [:and] (where-clause root-ns v))
+             :or (concat [:or] (where-clause root-ns v))
+             :not (concat [:not] (where-clause root-ns [v]))
+             (where-predicate root-ns k v))) %)
+   xs))
+
+#_ (where-clause "payment" [{:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}}])
+
 (defn- eqlify-where-predicate [selection-tree param]
-  (first (map (fn [[k v]]
-                (let [root-ns (-> (ffirst selection-tree)
-                                  namespace
-                                  inf/hyphenate)
-                      column  (->> (name k)
-                                   inf/hyphenate
-                                   (keyword root-ns))
-                      [op v]  (first v)]
-                  ((hql-predicate-fn op) column v)))
-              param)))
+  (let [root-ns (-> (ffirst selection-tree)
+                    namespace
+                    inf/hyphenate)]
+    (first (where-clause root-ns [param]))))
+
+#_(eqlify-where-predicate
+   #:Payment{:paymentId [nil]
+             :amount    [nil]}
+   {:and [{:amount     {:gt 5.99M}
+           :customerId {:eq 1}}]})
+
+#_(eqlify-where-predicate
+   {:Language/languageId [nil]
+    :Language/name       [nil]}
+   {:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]} })
 
 #_(eqlify-where-predicate {:Actor/firstName [nil]
                            :Actor/lastName  [nil]}
