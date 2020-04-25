@@ -82,9 +82,9 @@
   (mapcat 
    #(map (fn [[k v]]
            (case k
-             :and (concat [:and] (where-clause root-ns v))
-             :or (concat [:or] (where-clause root-ns v))
-             :not (concat [:not] (where-clause root-ns [v]))
+             :and (if (seq v) (concat [:and] (where-clause root-ns v)) [])
+             :or (if (seq v) (concat [:or] (where-clause root-ns v)) [])
+             :not (if (seq v) (concat [:not] (where-clause root-ns [v])) [])
              (where-predicate root-ns k v))) %)
    xs))
 
@@ -115,7 +115,8 @@
 (defn- to-eql-param [selection-tree [arg value]]
   (case arg
     :orderBy [:order-by (eqlify-order-by-param selection-tree value)]
-    :where [:where (eqlify-where-predicate selection-tree value)]
+    :where (when-let [pred (seq (eqlify-where-predicate selection-tree value))]
+             [:where pred])
     [arg value]))
 
 (defn- parameters [selection-tree args]
