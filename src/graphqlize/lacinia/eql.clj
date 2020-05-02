@@ -76,7 +76,15 @@
                     inf/hyphenate
                     (keyword root-ns))
         [op v] (first pred)]
-    ((hql-predicate-fn op) column v)))
+    (if-let [pred-fn (hql-predicate-fn op)]
+      (pred-fn column v)
+      (let [col [column (-> (ffirst pred) name keyword)]
+            [op v] (first v)]
+        ((hql-predicate-fn op) col v)))))
+
+#_(ffirst {:country {:eq "Algeria"}})
+#_(where-predicate "city" :country {:country {:eq "Algeria"}})
+#_(where-predicate "city" :cityId {:eq 1})
 
 (defn- where-clause [root-ns xs]
   (mapcat 
@@ -90,11 +98,15 @@
 
 #_ (where-clause "payment" [{:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}}])
 
+#_ (where-clause "city" [{:country {:country {:eq "Algeria"}}}])
+
 (defn- eqlify-where-predicate [selection-tree param]
   (let [root-ns (-> (ffirst selection-tree)
                     namespace
                     inf/hyphenate)]
     (first (where-clause root-ns [param]))))
+
+
 
 #_(eqlify-where-predicate
    #:Payment{:paymentId [nil]
