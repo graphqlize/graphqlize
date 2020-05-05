@@ -71,10 +71,13 @@
    :isNotNull (hql-predicate :isNotNull)
    :between   (hql-predicate :between)})
 
+(defn- eql-attr [root-ns field]
+  (->> (name field)
+       inf/hyphenate
+       (keyword root-ns)))
+
 (defn- where-predicate [root-ns field pred]
-  (let [column (->> (name field)
-                    inf/hyphenate
-                    (keyword root-ns))
+  (let [column (eql-attr root-ns field)
         [op v] (first pred)]
     (if-let [pred-fn (hql-predicate-fn op)]
       (pred-fn column v)
@@ -93,12 +96,15 @@
              :and (if (seq v) (concat [:and] (where-clause root-ns v)) [])
              :or (if (seq v) (concat [:or] (where-clause root-ns v)) [])
              :not (if (seq v) (concat [:not] (where-clause root-ns [v])) [])
+             :have (concat [:have (eql-attr root-ns v)])
              (where-predicate root-ns k v))) %)
    xs))
 
 #_ (where-clause "payment" [{:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}}])
 
 #_ (where-clause "city" [{:country {:country {:eq "Algeria"}}}])
+
+#_ (where-clause "author" [{:have :courses}])
 
 (defn- eqlify-where-predicate [selection-tree param]
   (let [root-ns (-> (ffirst selection-tree)

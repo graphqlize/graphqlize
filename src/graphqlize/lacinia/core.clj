@@ -41,7 +41,7 @@
         gql-schema     {:objects (l-obj/generate heql-meta-data)
                         :queries (l-query/generate heql-meta-data)
                         :scalars (l-scalar/generate)
-                        :enums (l-enum/generate)
+                        :enums (l-enum/generate heql-meta-data)
                         :input-objects (l-ip-obj/generate heql-meta-data)}]
     (trace>> :gql-schema gql-schema)
     (lacinia-schema/compile

@@ -59,20 +59,26 @@
       {(:attr.ident/camel-case attr-md) {:type (-> (name lacinia-type)
                                                    (str "ComparisonOp")
                                                    keyword)}})))
-
 (defn- entity-meta-data->input-object [heql-meta-data entity-meta-data]
-  (let [entity-name               (name (:entity.ident/pascal-case entity-meta-data))
-        attr-idents               (heql-md/attr-idents entity-meta-data)
-        predicate-type            (keyword (str entity-name "Predicate"))
-        nested-predicate-type     (keyword (str entity-name "PrimitivePredicate"))
-        attrs-md                  (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents)
-        non-relationship-attrs-md (filter #(not= :attr.type/ref (:attr/type %)) attrs-md)]
+  (let [entity-name                (name (:entity.ident/pascal-case entity-meta-data))
+        attr-idents                (heql-md/attr-idents entity-meta-data)
+        predicate-type             (keyword (str entity-name "Predicate"))
+        nested-predicate-type      (keyword (str entity-name "PrimitivePredicate"))
+        attrs-md                   (map #(heql-md/attr-meta-data heql-meta-data %) attr-idents)
+        non-relationship-attrs-md  (filter #(not= :attr.type/ref (:attr/type %)) attrs-md)
+        list-relationship-attrs-md (filter #(#{:attr.column.ref.type/one-to-many
+                                               :attr.column.ref.type/many-to-many}
+                                             (:attr.column.ref/type %)) attrs-md)
+        have-predicate             (when (seq list-relationship-attrs-md)
+                                     (keyword (str entity-name "HaveEnum")))]
     {(keyword (str entity-name "OrderBy")) {:fields (apply merge (map order-by-field non-relationship-attrs-md))}
      predicate-type                        {:fields (apply merge
-                                                           (cons
-                                                            {:and {:type (list 'list (list 'non-null predicate-type))}
-                                                             :or  {:type (list 'list (list 'non-null predicate-type))}
-                                                             :not {:type predicate-type}}
+                                                           (concat
+                                                            [{:and {:type (list 'list (list 'non-null predicate-type))}
+                                                              :or  {:type (list 'list (list 'non-null predicate-type))}
+                                                              :not {:type predicate-type}}
+                                                             (when have-predicate
+                                                               {:have {:type have-predicate}})]
                                                             (map #(where-predicate-field heql-meta-data %) attrs-md)))}
      nested-predicate-type                 {:fields (apply merge
                                                            (cons
