@@ -81,7 +81,7 @@
         [op v] (first pred)]
     (if-let [pred-fn (hql-predicate-fn op)]
       (pred-fn column v)
-      (let [col [column (-> (ffirst pred) name keyword)]
+      (let [col    [column (-> (ffirst pred) name keyword)]
             [op v] (first v)]
         ((hql-predicate-fn op) col v)))))
 
@@ -90,7 +90,7 @@
 #_(where-predicate "city" :cityId {:eq 1})
 
 (defn- where-clause [root-ns xs]
-  (mapcat 
+  (mapcat
    #(map (fn [[k v]]
            (case k
              :and (if (seq v) (concat [:and] (where-clause root-ns v)) [])
@@ -100,19 +100,17 @@
              (where-predicate root-ns k v))) %)
    xs))
 
-#_ (where-clause "payment" [{:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}}])
+#_(where-clause "payment" [{:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}}])
 
-#_ (where-clause "city" [{:country {:country {:eq "Algeria"}}}])
+#_(where-clause "city" [{:country {:country {:eq "Algeria"}}}])
 
-#_ (where-clause "author" [{:have :courses}])
+#_(where-clause "author" [{:have :courses}])
 
 (defn- eqlify-where-predicate [selection-tree param]
   (let [root-ns (-> (ffirst selection-tree)
                     namespace
                     inf/hyphenate)]
     (first (where-clause root-ns [param]))))
-
-
 
 #_(eqlify-where-predicate
    #:Payment{:paymentId [nil]
@@ -123,7 +121,7 @@
 #_(eqlify-where-predicate
    {:Language/languageId [nil]
     :Language/name       [nil]}
-   {:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]} })
+   {:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}})
 
 #_(eqlify-where-predicate {:Actor/firstName [nil]
                            :Actor/lastName  [nil]}
@@ -145,6 +143,19 @@
 
 (declare properties)
 
+(defn- resolve-aggregate-column [prop]
+  (let [n (namespace prop)
+        k (name prop)]
+    (if-let [agg-prop (some (fn [prefix]
+                     (when (string/starts-with? k (str prefix "-"))
+                       [(keyword (string/replace-first prefix #"-of$" ""))
+                        (keyword n (string/replace-first k (re-pattern (str "^" prefix "-")) ""))])) 
+                   ["count-of" "avg-of" "sum-of" "min-of" "max-of"])]
+      agg-prop
+      prop)))
+
+#_(resolve-aggregate-column :course/avg-of-rating)
+
 (defn- field->prop [namespaces selection-tree field]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
         prop         (->> (name field)
@@ -156,7 +167,11 @@
                          prop
                          (list prop parameters))]
         {prop (properties namespaces selections)})
-      prop)))
+      (resolve-aggregate-column prop))))
+
+#_(field->prop [:public] {:Course/countOfRating [nil]
+                          :Course/maxOfRating   [nil]
+                          :Course/sumOfRating   [nil]} :Course/countOfRating)
 
 (defn- properties [namespaces selection-tree]
   (vec (map #(field->prop namespaces selection-tree %) (keys selection-tree))))
@@ -171,3 +186,7 @@
         properties   (properties namespaces selection-tree)
         eql          [{ident properties}]]
     (trace>> :eql eql)))
+
+#_(generate [:public] {:Course/countOfRating [nil]
+                       :Course/maxOfRating   [nil]
+                       :Course/sumOfRating   [nil]} nil)
