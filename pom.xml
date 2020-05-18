@@ -30,7 +30,7 @@
     <dependency>
       <groupId>org.graphqlize</groupId>
       <artifactId>honeyeql</artifactId>
-      <version>0.1.0-alpha26</version>
+      <version>0.1.0-alpha29</version>
     </dependency>
   </dependencies>
 

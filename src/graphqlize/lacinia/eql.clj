@@ -96,7 +96,7 @@
              :and (if (seq v) (concat [:and] (where-clause root-ns v)) [])
              :or (if (seq v) (concat [:or] (where-clause root-ns v)) [])
              :not (if (seq v) (concat [:not] (where-clause root-ns [v])) [])
-             :have (concat [:have (eql-attr root-ns v)])
+             :have (concat [:exists (eql-attr root-ns v)])
              (where-predicate root-ns k v))) %)
    xs))
 

@@ -36,7 +36,7 @@
    :graphqlize/collection-query     (hql-resolver db-adapter heql/query)})
 
 (defn schema [db-spec]
-  (let [db-adapter     (heql-db/initialize db-spec {:attr/naming-convention :unqualified-camel-case
+  (let [db-adapter     (heql-db/initialize db-spec {:attr/return-as :naming-convention/unqualified-camel-case
                                                     :eql/mode               :eql.mode/strict})
         heql-meta-data (:heql-meta-data db-adapter)
         gql-schema     {:objects (l-obj/generate heql-meta-data)
