@@ -27,15 +27,24 @@
                        (str "OrderBy")
                        keyword)}})
 
+(defn- group-by-arg [e-md]
+  {:groupBy {:type (list 'list
+                         (list 'non-null
+                          (-> (:entity.ident/pascal-case e-md)
+                              name
+                              (str "GroupByEnum")
+                              keyword)))}})
+
 (defn- where-predicate-arg [e-md]
   {:where {:type (-> (:entity.ident/pascal-case e-md)
-                       name
-                       (str "Predicate")
-                       keyword)}})
+                     name
+                     (str "Predicate")
+                     keyword)}})
 
 (defn many-field-args [heql-meta-data entity-meta-data]
   (let [default-args (merge pagination-args
-                            (where-predicate-arg entity-meta-data))]
+                            (where-predicate-arg entity-meta-data)
+                            (group-by-arg entity-meta-data))]
     (if (not= "MySQL" (heql-md/db-product-name heql-meta-data))
       (merge default-args
              (order-by-arg entity-meta-data))
@@ -44,8 +53,9 @@
 (defn query-args [heql-meta-data entity-meta-data query-type]
   (cond-> {}
     (= :graphqlize/query-by-primary-key query-type) (merge (query-by-primary-key-args heql-meta-data entity-meta-data))
-    (= :graphqlize/collection-query query-type) (merge 
+    (= :graphqlize/collection-query query-type) (merge
                                                  pagination-args
                                                  (order-by-arg entity-meta-data)
-                                                 (where-predicate-arg entity-meta-data))
+                                                 (where-predicate-arg entity-meta-data)
+                                                 (group-by-arg entity-meta-data))
     :else identity))

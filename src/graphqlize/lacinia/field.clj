@@ -23,9 +23,9 @@
           field-type (l-type/lacinia-type type)
           prefixes (aggregate-field-prefixes type)
           int-type (list 'non-null 'Int)
-          float-type (list 'non-null 'Float)
-          decimal-type (list 'non-null 'BigDecimal)
-          field-type (list 'non-null field-type)]
+          float-type 'Float
+          decimal-type 'BigDecimal
+          field-type field-type]
       (reduce (fn [m p]
                 (assoc m (keyword (str p field-name))
                        (case p

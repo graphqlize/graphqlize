@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [honeyeql.debug :refer [trace>>]]))
 
+
 (defn- eql-root-attr-ns [namespaces selection-tree]
   (let [raw-namespaces   (map name namespaces)
         raw-entity-ident (-> (ffirst selection-tree)
@@ -18,7 +19,7 @@
 #_(eql-root-attr-ns [:public] {:Language/languageId [nil]})
 #_(eql-root-attr-ns [:person] {:PersonStateProvince/languageId [nil]})
 
-(def ^:private reserved-args #{:limit :offset :orderBy :where})
+(def ^:private reserved-args #{:limit :offset :orderBy :where :groupBy})
 
 (defn- ident [root-attr-ns args]
   (->> (remove (fn [[k _]]
@@ -32,11 +33,9 @@
 #_(ident "film-actor" {:film-id  1
                        :actor-id 1})
 
-(defn- eqlify-order-by-param [selection-tree param]
+(defn- eqlify-order-by-param [namespaces selection-tree param]
   (map (fn [[k v]]
-         (let [root-ns (-> (ffirst selection-tree)
-                           namespace
-                           inf/hyphenate)]
+         (let [root-ns (eql-root-attr-ns namespaces selection-tree)]
            [(->> (name k)
                  inf/hyphenate
                  (keyword root-ns))
@@ -44,9 +43,13 @@
                 string/lower-case
                 keyword)])) param))
 
-#_(eqlify-order-by-param {:City/city [nil]}
+#_(eqlify-order-by-param [:public] {:City/city [nil]}
                          {:firstName :ASC
                           :lastName  :DESC})
+
+(defn- eqlify-group-by-param [namespaces selection-tree value]
+  (let [root-ns (eql-root-attr-ns namespaces selection-tree)]
+    (map #(keyword root-ns (inf/hyphenate (name %))) value)))
 
 (defn- hql-predicate [op]
   (fn [col v]
@@ -106,39 +109,42 @@
 
 #_(where-clause "author" [{:have :courses}])
 
-(defn- eqlify-where-predicate [selection-tree param]
-  (let [root-ns (-> (ffirst selection-tree)
-                    namespace
-                    inf/hyphenate)]
-    (first (where-clause root-ns [param]))))
+(defn- eqlify-where-predicate [namespaces selection-tree param]
+  (-> (eql-root-attr-ns namespaces selection-tree) 
+      (where-clause [param]) 
+      first))
 
 #_(eqlify-where-predicate
+   [:public]
    #:Payment{:paymentId [nil]
              :amount    [nil]}
    {:and [{:amount     {:gt 5.99M}
            :customerId {:eq 1}}]})
 
 #_(eqlify-where-predicate
+   [:public]
    {:Language/languageId [nil]
     :Language/name       [nil]}
    {:not {:or [{:name {:eq "English"}} {:name {:eq "French"}}]}})
 
-#_(eqlify-where-predicate {:Actor/firstName [nil]
+#_(eqlify-where-predicate [:public]
+                          {:Actor/firstName [nil]
                            :Actor/lastName  [nil]}
                           {:actorId {:eq 1}
                            :name    {:eq "foo"}})
 
-(defn- to-eql-param [selection-tree [arg value]]
+(defn- to-eql-param [namespaces selection-tree [arg value]]
   (case arg
-    :orderBy [:order-by (eqlify-order-by-param selection-tree value)]
-    :where (when-let [pred (seq (eqlify-where-predicate selection-tree value))]
+    :orderBy [:order-by (eqlify-order-by-param namespaces selection-tree value)]
+    :where (when-let [pred (seq (eqlify-where-predicate namespaces selection-tree value))]
              [:where pred])
+    :groupBy [:group-by (eqlify-group-by-param namespaces selection-tree value)]
     [arg value]))
 
-(defn- parameters [selection-tree args]
+(defn- parameters [namespaces selection-tree args]
   (->> (filter (fn [[k _]]
                  (reserved-args k)) args)
-       (map #(to-eql-param selection-tree %))
+       (map #(to-eql-param namespaces selection-tree %))
        (into {})))
 
 (declare properties)
@@ -162,7 +168,7 @@
                           inf/hyphenate
                           (keyword root-attr-ns))]
     (if-let [{:keys [selections args]} (first (selection-tree field))]
-      (let [parameters (parameters selections args)
+      (let [parameters (parameters namespaces selections args)
             prop       (if (empty? parameters)
                          prop
                          (list prop parameters))]
@@ -179,7 +185,7 @@
 (defn generate [namespaces selection-tree args]
   (let [root-attr-ns (eql-root-attr-ns namespaces selection-tree)
         ident        (ident root-attr-ns args)
-        parameters   (parameters selection-tree args)
+        parameters   (parameters namespaces selection-tree args)
         ident        (if (empty? parameters)
                        ident
                        (list ident parameters))
