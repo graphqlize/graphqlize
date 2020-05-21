@@ -17,7 +17,7 @@ It aims to simplify the effort required to expose GraphQL APIs over relational d
 
 In the JVM ecosystem, developing GraphQL APIs to expose the data from the relational databases requires a lot of manual work. Right from defining the GraphQL schemas (either code-first or schema-first) to wiring them with resolvers and the database access logic, we spend a significant amount of our development time.
 
-In addition to this, we also need to take care of optimizing the underlying SQL queries to avoid problems like N+1 queries. We have to account the maintenance of the resulting codebase as well!
+In addition to this, we also need to take care of optimizing the underlying SQL queries to avoid problems like N+1 queries. We have to account for the maintenance of the resulting codebase as well!
 
 GraphQLize will help you to overcome all these shortcomings. It provides you with an efficient GraphQL implementation in just few lines of code.
 
